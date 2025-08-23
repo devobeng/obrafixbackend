@@ -105,6 +105,16 @@ const userSchema = new Schema<IUser>(
     suspendedReason: { type: String, trim: true },
     suspendedAt: { type: Date },
     suspendedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    // Emergency contacts for safety features
+    emergencyContacts: [
+      {
+        name: { type: String, required: true, trim: true },
+        phone: { type: String, required: true, trim: true },
+        email: { type: String, trim: true },
+        relationship: { type: String, trim: true },
+        isPrimary: { type: Boolean, default: false },
+      },
+    ],
   },
   {
     timestamps: true,

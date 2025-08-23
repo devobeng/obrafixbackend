@@ -198,6 +198,80 @@ const serviceSchema = new Schema<IService>(
       type: String,
       trim: true,
     },
+    // Enhanced provider preferences
+    providerPreferences: {
+      maxDistance: {
+        type: Number,
+        min: [1, "Maximum distance must be at least 1km"],
+        max: [100, "Maximum distance cannot exceed 100km"],
+        default: 10,
+      },
+      preferredWorkingHours: {
+        startTime: String,
+        endTime: String,
+      },
+      emergencyServiceAvailable: {
+        type: Boolean,
+        default: false,
+      },
+      weekendService: {
+        type: Boolean,
+        default: false,
+      },
+      holidayService: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    // Service scheduling preferences
+    scheduling: {
+      advanceBookingRequired: {
+        type: Number,
+        min: [0, "Advance booking time cannot be negative"],
+        default: 24, // hours
+      },
+      maxBookingsPerDay: {
+        type: Number,
+        min: [1, "Maximum bookings per day must be at least 1"],
+        max: [20, "Maximum bookings per day cannot exceed 20"],
+        default: 5,
+      },
+      cancellationPolicy: {
+        type: String,
+        enum: ["flexible", "moderate", "strict"],
+        default: "moderate",
+      },
+      cancellationNotice: {
+        type: Number,
+        min: [0, "Cancellation notice cannot be negative"],
+        default: 2, // hours
+      },
+    },
+    // Service area and coverage
+    coverage: {
+      cities: [String],
+      neighborhoods: [String],
+      postalCodes: [String],
+      customAreas: [String],
+    },
+    // Provider availability status
+    availabilityStatus: {
+      isOnline: {
+        type: Boolean,
+        default: true,
+      },
+      lastSeen: Date,
+      autoAccept: {
+        type: Boolean,
+        default: false,
+      },
+      autoAcceptRadius: {
+        type: Number,
+        min: [1, "Auto-accept radius must be at least 1km"],
+        max: [50, "Auto-accept radius cannot exceed 50km"],
+        default: 5,
+      },
+    },
     warranty: {
       type: String,
       trim: true,

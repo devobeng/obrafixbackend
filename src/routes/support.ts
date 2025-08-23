@@ -33,7 +33,7 @@ router.get("/faq", async (req, res) => {
 });
 
 // Submit support ticket
-router.post("/ticket", authenticate, async (req, res) => {
+router.post("/ticket", authenticate(), async (req, res) => {
   try {
     const { subject, message, category, priority } = req.body;
 
@@ -59,7 +59,7 @@ router.post("/ticket", authenticate, async (req, res) => {
 });
 
 // Get user support tickets
-router.get("/tickets", authenticate, async (req, res) => {
+router.get("/tickets", authenticate(), async (req, res) => {
   try {
     // TODO: Implement user tickets retrieval logic
     res.status(200).json({
@@ -77,7 +77,7 @@ router.get("/tickets", authenticate, async (req, res) => {
 });
 
 // Get support ticket details
-router.get("/ticket/:id", authenticate, async (req, res) => {
+router.get("/ticket/:id", authenticate(), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -101,7 +101,7 @@ router.get("/ticket/:id", authenticate, async (req, res) => {
 });
 
 // Add reply to support ticket
-router.post("/ticket/:id/reply", authenticate, async (req, res) => {
+router.post("/ticket/:id/reply", authenticate(), async (req, res) => {
   try {
     const { id } = req.params;
     const { message } = req.body;

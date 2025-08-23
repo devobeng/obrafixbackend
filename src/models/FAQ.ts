@@ -4,7 +4,13 @@ export interface IFAQ extends Document {
   _id: string;
   question: string;
   answer: string;
-  category: "general" | "booking" | "payment" | "safety" | "technical" | "refunds";
+  category:
+    | "general"
+    | "booking"
+    | "payment"
+    | "safety"
+    | "technical"
+    | "refunds";
   subcategory?: string;
   tags: string[];
   isActive: boolean;
@@ -44,11 +50,13 @@ const faqSchema = new Schema<IFAQ>(
       trim: true,
       maxlength: [100, "Subcategory cannot exceed 100 characters"],
     },
-    tags: [{
-      type: String,
-      trim: true,
-      maxlength: [50, "Tag cannot exceed 50 characters"],
-    }],
+    tags: [
+      {
+        type: String,
+        trim: true,
+        maxlength: [50, "Tag cannot exceed 50 characters"],
+      },
+    ],
     isActive: {
       type: Boolean,
       default: true,
@@ -97,41 +105,45 @@ faqSchema.index({ priority: -1, helpfulCount: -1 });
 faqSchema.index({ isActive: 1, lastUpdated: -1 });
 
 // Static method to find FAQs by category
-faqSchema.statics.findByCategory = function(category: string, subcategory?: string) {
+faqSchema.statics.findByCategory = function (
+  category: string,
+  subcategory?: string
+) {
   const query: any = { category, isActive: true };
   if (subcategory) query.subcategory = subcategory;
-  
-  return this.find(query)
-    .sort({ priority: -1, helpfulCount: -1, lastUpdated: -1 });
+
+  return this.find(query).sort({
+    priority: -1,
+    helpfulCount: -1,
+    lastUpdated: -1,
+  });
 };
 
 // Static method to search FAQs
-faqSchema.statics.search = function(searchTerm: string, category?: string) {
+faqSchema.statics.search = function (searchTerm: string, category?: string) {
   const query: any = {
     isActive: true,
     $or: [
       { question: { $regex: searchTerm, $options: "i" } },
       { answer: { $regex: searchTerm, $options: "i" } },
-      { tags: { $in: [new RegExp(searchTerm, "i")] } }
-    ]
+      { tags: { $in: [new RegExp(searchTerm, "i")] } },
+    ],
   };
-  
+
   if (category) query.category = category;
-  
-  return this.find(query)
-    .sort({ priority: -1, helpfulCount: -1 })
-    .limit(20);
+
+  return this.find(query).sort({ priority: -1, helpfulCount: -1 }).limit(20);
 };
 
 // Static method to get popular FAQs
-faqSchema.statics.getPopular = function(limit: number = 10) {
+faqSchema.statics.getPopular = function (limit: number = 10) {
   return this.find({ isActive: true })
     .sort({ helpfulCount: -1, notHelpfulCount: 1 })
     .limit(limit);
 };
 
 // Static method to get FAQ categories with counts
-faqSchema.statics.getCategoriesWithCounts = function() {
+faqSchema.statics.getCategoriesWithCounts = function () {
   return this.aggregate([
     { $match: { isActive: true } },
     {
@@ -139,11 +151,11 @@ faqSchema.statics.getCategoriesWithCounts = function() {
         _id: "$category",
         count: { $sum: 1 },
         subcategories: {
-          $addToSet: "$subcategory"
-        }
-      }
+          $addToSet: "$subcategory",
+        },
+      },
     },
-    { $sort: { count: -1 } }
+    { $sort: { count: -1 } },
   ]);
 };
 
@@ -156,4 +168,4 @@ interface IFAQModel extends mongoose.Model<IFAQ> {
 }
 
 export const FAQ = mongoose.model<IFAQ, IFAQModel>("FAQ", faqSchema);
-export default FAQ; 
+export default FAQ;

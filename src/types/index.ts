@@ -58,6 +58,14 @@ export interface IUser extends Document {
   suspendedReason?: string;
   suspendedAt?: Date;
   suspendedBy?: string;
+  // Emergency contacts for safety features
+  emergencyContacts?: Array<{
+    name: string;
+    phone: string;
+    email?: string;
+    relationship?: string;
+    isPrimary: boolean;
+  }>;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -128,6 +136,38 @@ export interface IService extends Document {
   tags: string[];
   requirements: string[];
   estimatedDuration?: string;
+  // Enhanced provider preferences
+  providerPreferences?: {
+    maxDistance: number;
+    preferredWorkingHours?: {
+      startTime: string;
+      endTime: string;
+    };
+    emergencyServiceAvailable: boolean;
+    weekendService: boolean;
+    holidayService: boolean;
+  };
+  // Service scheduling preferences
+  scheduling?: {
+    advanceBookingRequired: number; // hours
+    maxBookingsPerDay: number;
+    cancellationPolicy: "flexible" | "moderate" | "strict";
+    cancellationNotice: number; // hours
+  };
+  // Service area and coverage
+  coverage?: {
+    cities: string[];
+    neighborhoods: string[];
+    postalCodes: string[];
+    customAreas: string[];
+  };
+  // Provider availability status
+  availabilityStatus?: {
+    isOnline: boolean;
+    lastSeen?: Date;
+    autoAccept: boolean;
+    autoAcceptRadius: number;
+  };
   warranty?: string;
   commissionRate?: number; // percentage for admin
   createdAt: Date;

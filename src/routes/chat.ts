@@ -11,7 +11,7 @@ export const createChatRoutes = (socketServer: SocketServer) => {
   const chatController = new ChatController(socketServer);
 
   // Apply authentication middleware to all chat routes
-  router.use(authenticate);
+  router.use(authenticate());
 
   // Chat message routes
   router.post(

@@ -7,13 +7,11 @@ const withdrawalRequestSchema = new Schema<IWithdrawalRequest>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
     walletId: {
       type: Schema.Types.ObjectId,
       ref: "Wallet",
       required: true,
-      index: true,
     },
     amount: {
       type: Number,
@@ -90,7 +88,7 @@ const withdrawalRequestSchema = new Schema<IWithdrawalRequest>(
 withdrawalRequestSchema.index({ userId: 1, createdAt: -1 });
 withdrawalRequestSchema.index({ walletId: 1 });
 withdrawalRequestSchema.index({ status: 1 });
-withdrawalRequestSchema.index({ reference: 1 }, { unique: true });
+// reference field already has unique: true in schema definition
 withdrawalRequestSchema.index({ createdAt: -1 });
 
 // Static methods
@@ -99,10 +97,7 @@ withdrawalRequestSchema.statics["findByUser"] = function (
   limit: number = 50,
   skip: number = 0
 ) {
-  return this.find({ userId })
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  return this.find({ userId }).sort({ createdAt: -1 }).skip(skip).limit(limit);
 };
 
 withdrawalRequestSchema.statics["findByStatus"] = function (status: string) {
@@ -110,7 +105,10 @@ withdrawalRequestSchema.statics["findByStatus"] = function (status: string) {
 };
 
 withdrawalRequestSchema.statics["findPendingRequests"] = function () {
-  return this.find({ status: "pending" }).populate("userId", "firstName lastName email");
+  return this.find({ status: "pending" }).populate(
+    "userId",
+    "firstName lastName email"
+  );
 };
 
 // Instance methods
@@ -119,14 +117,19 @@ withdrawalRequestSchema.methods["markAsProcessing"] = function () {
   return this.save();
 };
 
-withdrawalRequestSchema.methods["markAsCompleted"] = function (adminId: string) {
+withdrawalRequestSchema.methods["markAsCompleted"] = function (
+  adminId: string
+) {
   this.status = "completed";
   this.processedAt = new Date();
   this.processedBy = adminId;
   return this.save();
 };
 
-withdrawalRequestSchema.methods["markAsFailed"] = function (reason: string, adminId: string) {
+withdrawalRequestSchema.methods["markAsFailed"] = function (
+  reason: string,
+  adminId: string
+) {
   this.status = "failed";
   this.failureReason = reason;
   this.processedAt = new Date();
@@ -146,4 +149,4 @@ export const WithdrawalRequest = mongoose.model<IWithdrawalRequest, any>(
   "WithdrawalRequest",
   withdrawalRequestSchema
 );
-export default WithdrawalRequest; 
+export default WithdrawalRequest;

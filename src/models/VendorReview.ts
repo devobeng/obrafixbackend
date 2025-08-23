@@ -16,6 +16,13 @@ export interface IVendorReview extends Document {
   isPublic: boolean;
   helpfulCount: number;
   reportCount: number;
+  helpfulUsers: string[];
+  reportedUsers: string[];
+  providerResponse?: {
+    comment: string;
+    createdAt: Date;
+    updatedAt?: Date;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -100,6 +107,32 @@ const vendorReviewSchema = new Schema<IVendorReview>(
     reportCount: {
       type: Number,
       default: 0,
+    },
+    helpfulUsers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    reportedUsers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    providerResponse: {
+      comment: {
+        type: String,
+        trim: true,
+        maxlength: [1000, "Provider response cannot exceed 1000 characters"],
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
+      updatedAt: {
+        type: Date,
+      },
     },
   },
   {

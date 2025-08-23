@@ -7,13 +7,11 @@ const walletTransactionSchema = new Schema<IWalletTransaction>(
       type: Schema.Types.ObjectId,
       ref: "Wallet",
       required: true,
-      index: true,
     },
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
     type: {
       type: String,
@@ -89,7 +87,7 @@ const walletTransactionSchema = new Schema<IWalletTransaction>(
 walletTransactionSchema.index({ walletId: 1, createdAt: -1 });
 walletTransactionSchema.index({ userId: 1, createdAt: -1 });
 walletTransactionSchema.index({ type: 1, status: 1 });
-walletTransactionSchema.index({ reference: 1 }, { unique: true });
+// reference field already has unique: true in schema definition
 walletTransactionSchema.index({ "metadata.bookingId": 1 });
 walletTransactionSchema.index({ createdAt: -1 });
 
@@ -110,10 +108,7 @@ walletTransactionSchema.statics["findByUser"] = function (
   limit: number = 50,
   skip: number = 0
 ) {
-  return this.find({ userId })
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  return this.find({ userId }).sort({ createdAt: -1 }).skip(skip).limit(limit);
 };
 
 walletTransactionSchema.statics["findByType"] = function (
@@ -152,4 +147,4 @@ export const WalletTransaction = mongoose.model<IWalletTransaction, any>(
   "WalletTransaction",
   walletTransactionSchema
 );
-export default WalletTransaction; 
+export default WalletTransaction;
