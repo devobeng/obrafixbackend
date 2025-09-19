@@ -16,16 +16,16 @@ export class JobSchedulingService {
   private initializeCronJobs(): void {
     // Check for expired job requests every 5 minutes
     this.scheduleExpiredJobRequests();
-    
+
     // Send job reminders every hour
     this.scheduleJobReminders();
-    
+
     // Check for overdue jobs every 30 minutes
     this.scheduleOverdueJobChecks();
-    
+
     // Auto-cancel expired bookings daily at midnight
     this.scheduleExpiredBookingCleanup();
-    
+
     // Update provider availability status every 15 minutes
     this.scheduleProviderAvailabilityUpdate();
   }
@@ -64,7 +64,6 @@ export class JobSchedulingService {
       } catch (error) {
         console.error("Error checking overdue jobs:", error);
       }
-      });
     });
 
     this.cronJobs.set("overdueJobChecks", job);
@@ -101,17 +100,17 @@ export class JobSchedulingService {
     try {
       const expiredRequests = await BookingRequest.find({
         status: "pending",
-        createdAt: { $lte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // 24 hours ago
+        createdAt: { $lte: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // 24 hours ago
       });
 
       for (const request of expiredRequests) {
         await request.expire();
-        
+
         // Update booking status
         await Booking.findByIdAndUpdate(request.bookingId, {
           status: "expired",
           "jobStatus.currentStatus": "expired",
-          "jobStatus.expiredAt": new Date()
+          "jobStatus.expiredAt": new Date(),
         });
 
         // Send notification to user
@@ -137,12 +136,13 @@ export class JobSchedulingService {
         "jobStatus.currentStatus": "confirmed",
         "bookingDetails.scheduledDate": {
           $gte: now,
-          $lte: reminderTime
-        }
+          $lte: reminderTime,
+        },
       }).populate("userId providerId serviceId");
 
       for (const job of upcomingJobs) {
-        const timeUntilJob = job.bookingDetails.scheduledDate.getTime() - now.getTime();
+        const timeUntilJob =
+          job.bookingDetails.scheduledDate.getTime() - now.getTime();
         const hoursUntilJob = Math.ceil(timeUntilJob / (1000 * 60 * 60));
 
         // Send reminder to user
@@ -151,8 +151,11 @@ export class JobSchedulingService {
           type: "job_reminder",
           title: "Upcoming Service Reminder",
           message: `Your service is scheduled in ${hoursUntilJob} hour(s). Please ensure you're available.`,
-          data: { bookingId: job._id, scheduledTime: job.bookingDetails.scheduledDate },
-          priority: "medium"
+          data: {
+            bookingId: job._id,
+            scheduledTime: job.bookingDetails.scheduledDate,
+          },
+          priority: "medium",
         });
 
         // Send reminder to provider
@@ -161,8 +164,11 @@ export class JobSchedulingService {
           type: "job_reminder",
           title: "Upcoming Job Reminder",
           message: `You have a service scheduled in ${hoursUntilJob} hour(s). Please prepare accordingly.`,
-          data: { bookingId: job._id, scheduledTime: job.bookingDetails.scheduledDate },
-          priority: "medium"
+          data: {
+            bookingId: job._id,
+            scheduledTime: job.bookingDetails.scheduledDate,
+          },
+          priority: "medium",
         });
       }
 
@@ -183,7 +189,7 @@ export class JobSchedulingService {
       const overdueJobs = await Booking.find({
         status: "confirmed",
         "jobStatus.currentStatus": "confirmed",
-        "bookingDetails.scheduledDate": { $lte: overdueThreshold }
+        "bookingDetails.scheduledDate": { $lte: overdueThreshold },
       }).populate("userId providerId");
 
       for (const job of overdueJobs) {
@@ -192,9 +198,13 @@ export class JobSchedulingService {
           userId: job.userId,
           type: "job_overdue",
           title: "Service Overdue",
-          message: "Your scheduled service is overdue. Please contact the provider or support team.",
-          data: { bookingId: job._id, scheduledTime: job.bookingDetails.scheduledDate },
-          priority: "high"
+          message:
+            "Your scheduled service is overdue. Please contact the provider or support team.",
+          data: {
+            bookingId: job._id,
+            scheduledTime: job.bookingDetails.scheduledDate,
+          },
+          priority: "high",
         });
 
         // Send overdue notification to provider
@@ -202,9 +212,13 @@ export class JobSchedulingService {
           userId: job.providerId,
           type: "job_overdue",
           title: "Job Overdue",
-          message: "You have an overdue service. Please update the status or contact the customer.",
-          data: { bookingId: job._id, scheduledTime: job.bookingDetails.scheduledDate },
-          priority: "high"
+          message:
+            "You have an overdue service. Please update the status or contact the customer.",
+          data: {
+            bookingId: job._id,
+            scheduledTime: job.bookingDetails.scheduledDate,
+          },
+          priority: "high",
         });
       }
 
@@ -223,11 +237,13 @@ export class JobSchedulingService {
 
       const expiredBookings = await Booking.find({
         status: { $in: ["expired", "cancelled", "rejected"] },
-        updatedAt: { $lte: expiredThreshold }
+        updatedAt: { $lte: expiredThreshold },
       });
 
       // Archive or delete expired bookings (implement based on business requirements)
-      console.log(`Found ${expiredBookings.length} expired bookings for cleanup`);
+      console.log(
+        `Found ${expiredBookings.length} expired bookings for cleanup`
+      );
     } catch (error) {
       console.error("Error cleaning up expired bookings:", error);
     }
@@ -242,10 +258,10 @@ export class JobSchedulingService {
       await Service.updateMany(
         {
           "availabilityStatus.lastSeen": { $lte: offlineThreshold },
-          "availabilityStatus.isOnline": true
+          "availabilityStatus.isOnline": true,
         },
         {
-          "availabilityStatus.isOnline": false
+          "availabilityStatus.isOnline": false,
         }
       );
     } catch (error) {
@@ -256,16 +272,19 @@ export class JobSchedulingService {
   // Send expired request notification
   private async sendExpiredRequestNotification(request: any): Promise<void> {
     try {
-      const booking = await Booking.findById(request.bookingId).populate("userId");
+      const booking = await Booking.findById(request.bookingId).populate(
+        "userId"
+      );
       if (!booking) return;
 
       await Notification.create({
         userId: booking.userId,
         type: "job_request_expired",
         title: "Job Request Expired",
-        message: "Your service request has expired. Please create a new request if you still need the service.",
+        message:
+          "Your service request has expired. Please create a new request if you still need the service.",
         data: { bookingId: request.bookingId },
-        priority: "medium"
+        priority: "medium",
       });
     } catch (error) {
       console.error("Error sending expired request notification:", error);
@@ -273,17 +292,22 @@ export class JobSchedulingService {
   }
 
   // Manual job scheduling methods
-  async scheduleJobReminder(bookingId: string, reminderTime: Date): Promise<void> {
+  async scheduleJobReminder(
+    bookingId: string,
+    reminderTime: Date
+  ): Promise<void> {
     try {
       const timeUntilReminder = reminderTime.getTime() - Date.now();
-      
+
       if (timeUntilReminder <= 0) {
         throw new AppError("Reminder time must be in the future", 400);
       }
 
       setTimeout(async () => {
         try {
-          const booking = await Booking.findById(bookingId).populate("userId providerId");
+          const booking = await Booking.findById(bookingId).populate(
+            "userId providerId"
+          );
           if (!booking) return;
 
           // Send reminder notification
@@ -293,13 +317,12 @@ export class JobSchedulingService {
             title: "Service Reminder",
             message: "This is a reminder for your scheduled service.",
             data: { bookingId: booking._id },
-            priority: "medium"
+            priority: "medium",
           });
         } catch (error) {
           console.error("Error sending custom job reminder:", error);
         }
       }, timeUntilReminder);
-
     } catch (error) {
       throw new AppError("Failed to schedule job reminder", 500);
     }
@@ -322,4 +345,4 @@ export class JobSchedulingService {
     }
     return status;
   }
-} 
+}

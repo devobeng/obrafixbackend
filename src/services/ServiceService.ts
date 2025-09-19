@@ -29,6 +29,21 @@ interface PaginatedResult<T> {
 }
 
 export class ServiceService {
+  // Get popular services
+  async getPopularServices(limit: number = 10): Promise<IService[]> {
+    try {
+      const services = await Service.find({ status: "active" })
+        .populate("provider", "firstName lastName profileImage")
+        .sort({ "rating.average": -1, "rating.count": -1, createdAt: -1 })
+        .limit(limit);
+
+      return services;
+    } catch (error) {
+      console.error("Error fetching popular services:", error);
+      throw new AppError("Failed to fetch popular services", 500);
+    }
+  }
+
   // Get services with pagination and filters
   async getServices(
     filters: ServiceFilters
@@ -239,19 +254,94 @@ export class ServiceService {
   // Get services by category
   async getServicesByCategory(
     category: string,
-    pagination: { page: number; limit: number }
+    options: {
+      page?: number;
+      limit?: number;
+      sortBy?: string;
+      sortOrder?: string;
+      minPrice?: number;
+      maxPrice?: number;
+      minRating?: number;
+      location?: string;
+      maxDistance?: number;
+      search?: string;
+    } = {}
   ): Promise<PaginatedResult<IService>> {
     try {
-      const { page, limit } = pagination;
+      const {
+        page = 1,
+        limit = 10,
+        sortBy = "createdAt",
+        sortOrder = "desc",
+        minPrice,
+        maxPrice,
+        minRating,
+        location,
+        maxDistance,
+        search,
+      } = options;
+
       const skip = (page - 1) * limit;
 
+      // Build filter query
+      const filterQuery: any = { category, status: "active" };
+
+      // Price filtering
+      if (minPrice !== undefined || maxPrice !== undefined) {
+        filterQuery["pricing.amount"] = {};
+        if (minPrice !== undefined) {
+          filterQuery["pricing.amount"].$gte = minPrice;
+        }
+        if (maxPrice !== undefined) {
+          filterQuery["pricing.amount"].$lte = maxPrice;
+        }
+      }
+
+      // Rating filtering
+      if (minRating !== undefined) {
+        filterQuery["rating.average"] = { $gte: minRating };
+      }
+
+      // Location filtering (basic implementation)
+      if (location) {
+        filterQuery["location.city"] = { $regex: location, $options: "i" };
+      }
+
+      // Search filtering
+      if (search) {
+        filterQuery.$or = [
+          { title: { $regex: search, $options: "i" } },
+          { description: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      // Build sort query
+      let sortQuery: any = {};
+      switch (sortBy) {
+        case "rating":
+          sortQuery["rating.average"] = sortOrder === "asc" ? 1 : -1;
+          break;
+        case "price":
+          sortQuery["pricing.amount"] = sortOrder === "asc" ? 1 : -1;
+          break;
+        case "name":
+          sortQuery["title"] = sortOrder === "asc" ? 1 : -1;
+          break;
+        case "distance":
+          // For now, sort by creation date as distance calculation would require user location
+          sortQuery["createdAt"] = sortOrder === "asc" ? 1 : -1;
+          break;
+        default:
+          sortQuery["createdAt"] = sortOrder === "asc" ? 1 : -1;
+      }
+
       const [services, total] = await Promise.all([
-        Service.find({ category, status: "active" })
+        Service.find(filterQuery)
           .populate("provider", "firstName lastName email profileImage")
-          .sort({ createdAt: -1 })
+          .sort(sortQuery)
           .skip(skip)
           .limit(limit),
-        Service.countDocuments({ category, status: "active" }),
+        Service.countDocuments(filterQuery),
       ]);
 
       const totalPages = Math.ceil(total / limit);

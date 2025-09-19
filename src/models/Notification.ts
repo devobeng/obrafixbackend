@@ -7,7 +7,6 @@ const notificationSchema = new Schema<INotification>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
     title: {
       type: String,
@@ -50,7 +49,6 @@ const notificationSchema = new Schema<INotification>(
     isRead: {
       type: Boolean,
       default: false,
-      index: true,
     },
     priority: {
       type: String,

@@ -19,6 +19,7 @@ router.get(
   validateRequest(servicePaginationSchema, "query"),
   serviceController.getAllServices
 );
+router.get("/popular", serviceController.getPopularServices);
 router.get("/:id", serviceController.getServiceById);
 router.get("/provider/:providerId", serviceController.getServicesByProvider);
 router.get("/category/:category", serviceController.getServicesByCategory);

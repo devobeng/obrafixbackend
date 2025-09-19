@@ -1,14 +1,21 @@
 import { z } from "zod";
 
 // User registration validation schema
-export const userRegistrationSchema = z.object({
-  email: z.string().email("Invalid email format"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  phone: z.string().optional(),
-  role: z.enum(["user", "provider"]).default("user"),
-});
+export const userRegistrationSchema = z
+  .object({
+    email: z.string().email("Invalid email format"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    firstName: z.string().min(2, "First name must be at least 2 characters"),
+    lastName: z.string().min(2, "Last name must be at least 2 characters"),
+    phoneNumber: z.string().optional(),
+    profilePicture: z.string().min(1, "Profile picture is required"),
+    role: z.enum(["user", "provider"]).default("user"),
+  })
+  .transform((data) => ({
+    ...data,
+    phone: data.phoneNumber ? data.phoneNumber.replace(/\s/g, "") : undefined, // Normalize phone number by removing spaces
+    profileImage: data.profilePicture, // Map profilePicture to profileImage for database
+  }));
 
 // Provider profile setup validation schema
 export const providerProfileSchema = z.object({
@@ -64,7 +71,7 @@ export const userUpdateSchema = z.object({
 
 // User login validation schema
 export const userLoginSchema = z.object({
-  email: z.string().email("Invalid email format"),
+  emailOrPhone: z.string().min(1, "Email or phone number is required"),
   password: z.string().min(1, "Password is required"),
 });
 

@@ -215,6 +215,56 @@ export class ServiceReviewService {
     }
   }
 
+  // Like a review
+  async likeReview(
+    reviewId: string,
+    userId: string
+  ): Promise<IServiceReview | null> {
+    try {
+      const review = await ServiceReview.findById(reviewId);
+      if (!review) {
+        throw new AppError("Review not found", 404);
+      }
+
+      // Increment likes count
+      review.likes += 1;
+      await review.save();
+
+      return review;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw new AppError("Failed to like review", 500);
+    }
+  }
+
+  // Unlike a review
+  async unlikeReview(
+    reviewId: string,
+    userId: string
+  ): Promise<IServiceReview | null> {
+    try {
+      const review = await ServiceReview.findById(reviewId);
+      if (!review) {
+        throw new AppError("Review not found", 404);
+      }
+
+      // Decrement likes count (ensure it doesn't go below 0)
+      if (review.likes > 0) {
+        review.likes -= 1;
+        await review.save();
+      }
+
+      return review;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw new AppError("Failed to unlike review", 500);
+    }
+  }
+
   // Update service rating after review changes
   private async updateServiceRating(serviceId: string): Promise<void> {
     try {

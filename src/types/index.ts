@@ -196,8 +196,10 @@ export interface IServiceReview extends Document {
   rating: number;
   comment: string;
   isVerified: boolean;
+  likes: number;
   createdAt: Date;
   updatedAt: Date;
+  relativeTime: string; // Virtual field
 }
 
 // Booking types

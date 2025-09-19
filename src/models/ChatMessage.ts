@@ -36,18 +36,15 @@ const chatMessageSchema = new Schema<IChatMessage>({
     type: Schema.Types.ObjectId,
     ref: "Booking",
     required: true,
-    index: true,
   },
   senderId: {
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
-    index: true,
   },
   recipientId: {
     type: Schema.Types.ObjectId,
     ref: "User",
-    index: true,
   },
   message: {
     type: String,
@@ -62,7 +59,6 @@ const chatMessageSchema = new Schema<IChatMessage>({
   isRead: {
     type: Boolean,
     default: false,
-    index: true,
   },
   readAt: {
     type: Date,
@@ -70,7 +66,6 @@ const chatMessageSchema = new Schema<IChatMessage>({
   timestamp: {
     type: Date,
     default: Date.now,
-    index: true,
   },
   metadata: {
     fileUrl: String,

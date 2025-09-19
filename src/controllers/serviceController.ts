@@ -7,6 +7,7 @@ import {
   serviceUpdateSchema,
 } from "../validators/serviceValidator";
 import { AppError } from "../utils/AppError";
+import { validateObjectId } from "../utils/validation";
 
 export class ServiceController {
   private serviceService: ServiceService;
@@ -14,6 +15,19 @@ export class ServiceController {
   constructor() {
     this.serviceService = new ServiceService();
   }
+
+  // Get popular services (public)
+  public getPopularServices = asyncHandler(
+    async (req: Request, res: Response) => {
+      const limit = parseInt(req.query["limit"] as string) || 10;
+      const services = await this.serviceService.getPopularServices(limit);
+
+      res.json({
+        success: true,
+        data: services,
+      });
+    }
+  );
 
   // Get all services (public)
   public getAllServices = asyncHandler(async (req: Request, res: Response) => {
@@ -55,6 +69,11 @@ export class ServiceController {
   // Get service by ID (public)
   public getServiceById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
+
+    if (!validateObjectId(id)) {
+      throw new AppError("Invalid service ID format", 400);
+    }
+
     const service = await this.serviceService.getServiceById(id);
 
     if (!service) {
@@ -183,10 +202,34 @@ export class ServiceController {
       const { category } = req.params;
       const page = parseInt(req.query["page"] as string) || 1;
       const limit = parseInt(req.query["limit"] as string) || 10;
+      const sortBy = req.query["sortBy"] as string;
+      const sortOrder = req.query["sortOrder"] as string;
+      const minPrice = req.query["minPrice"]
+        ? parseFloat(req.query["minPrice"] as string)
+        : undefined;
+      const maxPrice = req.query["maxPrice"]
+        ? parseFloat(req.query["maxPrice"] as string)
+        : undefined;
+      const minRating = req.query["minRating"]
+        ? parseFloat(req.query["minRating"] as string)
+        : undefined;
+      const location = req.query["location"] as string;
+      const maxDistance = req.query["maxDistance"]
+        ? parseFloat(req.query["maxDistance"] as string)
+        : undefined;
+      const search = req.query["search"] as string;
 
       const result = await this.serviceService.getServicesByCategory(category, {
         page,
         limit,
+        sortBy,
+        sortOrder,
+        minPrice,
+        maxPrice,
+        minRating,
+        location,
+        maxDistance,
+        search,
       });
 
       res.json({

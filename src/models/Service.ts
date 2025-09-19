@@ -25,21 +25,6 @@ const serviceSchema = new Schema<IService>(
       type: String,
       required: [true, "Service category is required"],
       trim: true,
-      enum: {
-        values: [
-          "cleaning",
-          "plumbing",
-          "electrical",
-          "carpentry",
-          "gardening",
-          "painting",
-          "moving",
-          "repair",
-          "maintenance",
-          "other",
-        ],
-        message: "Invalid service category",
-      },
     },
     subcategory: {
       type: String,

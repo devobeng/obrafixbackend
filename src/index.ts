@@ -37,6 +37,7 @@ import providerDashboardRoutes from "./routes/providerDashboard";
 import providerEarningsRoutes from "./routes/providerEarnings";
 import providerRatingsRoutes from "./routes/providerRatings";
 import providerCommunicationRoutes from "./routes/providerCommunication";
+import bannerRoutes from "./routes/banner";
 
 // Load environment variables
 require("dotenv").config();
@@ -110,6 +111,7 @@ app.use("/api/provider-dashboard", providerDashboardRoutes);
 app.use("/api/provider-earnings", providerEarningsRoutes);
 app.use("/api/provider-ratings", providerRatingsRoutes);
 app.use("/api/provider-communication", providerCommunicationRoutes);
+app.use("/api/banners", bannerRoutes);
 
 // 404 handler for undefined routes
 app.use(notFound);

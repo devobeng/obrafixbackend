@@ -17,26 +17,35 @@ export class AuthService {
     }
   }
 
-  // Authenticate user with email and password
+  // Authenticate user with email/phone and password
   async authenticateUser(
-    email: string,
+    emailOrPhone: string,
     password: string
   ): Promise<IUser | null> {
     try {
-      const user = await User.findByEmail(email);
+      console.log("AuthService: Looking for user with:", emailOrPhone);
+      const user = await User.findByEmailOrPhone(emailOrPhone);
+      console.log(
+        "AuthService: User found:",
+        user ? `${user.email} (${user.phone})` : "None"
+      );
 
       if (!user) {
+        console.log("AuthService: No user found");
         return null;
       }
 
       const isPasswordValid = await user.comparePassword(password);
+      console.log("AuthService: Password valid:", isPasswordValid);
 
       if (!isPasswordValid) {
+        console.log("AuthService: Invalid password");
         return null;
       }
 
       return user;
     } catch (error) {
+      console.error("AuthService: Authentication error:", error);
       throw new AppError("Authentication failed", 500);
     }
   }

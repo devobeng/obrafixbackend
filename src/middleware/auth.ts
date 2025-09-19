@@ -119,6 +119,9 @@ export const requireAdmin = () => requireRole("admin");
 // Provider-only middleware
 export const requireProvider = () => requireRole(["provider", "admin"]);
 
+// Simple token authentication middleware
+export const authenticateToken = () => authenticate({});
+
 // Optional authentication middleware
 export const optionalAuth = () => authenticate({ optional: true });
 

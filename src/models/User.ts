@@ -178,5 +178,48 @@ userSchema.statics["findByEmail"] = function (email: string) {
   return this.findOne({ email: email.toLowerCase() });
 };
 
+// Static method to find user by phone
+userSchema.statics["findByPhone"] = function (phone: string) {
+  return this.findOne({ phone: phone });
+};
+
+// Static method to find user by email or phone
+userSchema.statics["findByEmailOrPhone"] = function (emailOrPhone: string) {
+  // Check if it looks like an email (contains @)
+  if (emailOrPhone.includes("@")) {
+    console.log(
+      "User.findByEmailOrPhone: Searching by email:",
+      emailOrPhone.toLowerCase()
+    );
+    return this.findOne({ email: emailOrPhone.toLowerCase() });
+  } else {
+    // Normalize phone number: remove spaces and handle different formats
+    const normalizedPhone = emailOrPhone.replace(/\s/g, ""); // Remove all spaces
+    console.log(
+      "User.findByEmailOrPhone: Searching by phone:",
+      normalizedPhone
+    );
+
+    // Try multiple phone number formats
+    const phoneVariations = [
+      normalizedPhone, // Original format
+      normalizedPhone.startsWith("+233")
+        ? normalizedPhone
+        : `+233${normalizedPhone.slice(1)}`, // International format
+      normalizedPhone.startsWith("0")
+        ? normalizedPhone
+        : `0${normalizedPhone.slice(4)}`, // Local format
+    ];
+
+    console.log(
+      "User.findByEmailOrPhone: Phone variations to try:",
+      phoneVariations
+    );
+
+    // Search for any of the phone variations
+    return this.findOne({ phone: { $in: phoneVariations } });
+  }
+};
+
 export const User = mongoose.model<IUser, any>("User", userSchema);
 export default User;

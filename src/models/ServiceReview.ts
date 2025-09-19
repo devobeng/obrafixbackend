@@ -31,10 +31,16 @@ const serviceReviewSchema = new Schema<IServiceReview>(
       type: Boolean,
       default: false,
     },
+    likes: {
+      type: Number,
+      default: 0,
+      min: [0, "Likes cannot be negative"],
+    },
   },
   {
     timestamps: true,
     toJSON: {
+      virtuals: true,
       transform: function (_doc, ret: any) {
         ret.id = ret._id;
         delete ret._id;
@@ -66,6 +72,24 @@ serviceReviewSchema.statics["findByUser"] = function (userId: string) {
     .sort({ createdAt: -1 });
 };
 
+// Virtual field for relative time
+serviceReviewSchema.virtual("relativeTime").get(function () {
+  const now = new Date();
+  const reviewDate = this.createdAt;
+  const diffInMs = now.getTime() - reviewDate.getTime();
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+  const diffInWeeks = Math.floor(diffInDays / 7);
+  const diffInMonths = Math.floor(diffInDays / 30);
+
+  if (diffInDays === 0) return "Today";
+  if (diffInDays === 1) return "1 day ago";
+  if (diffInDays < 7) return `${diffInDays} days ago`;
+  if (diffInWeeks === 1) return "1 week ago";
+  if (diffInWeeks < 4) return `${diffInWeeks} weeks ago`;
+  if (diffInMonths === 1) return "1 month ago";
+  return `${diffInMonths} months ago`;
+});
+
 // Static method to get average rating for a service
 serviceReviewSchema.statics["getAverageRating"] = function (serviceId: string) {
   return this.aggregate([
@@ -87,8 +111,8 @@ interface IServiceReviewModel extends mongoose.Model<IServiceReview> {
   getAverageRating(serviceId: string): Promise<any[]>;
 }
 
-export const ServiceReview = mongoose.model<IServiceReview, IServiceReviewModel>(
-  "ServiceReview",
-  serviceReviewSchema
-);
+export const ServiceReview = mongoose.model<
+  IServiceReview,
+  IServiceReviewModel
+>("ServiceReview", serviceReviewSchema);
 export default ServiceReview;

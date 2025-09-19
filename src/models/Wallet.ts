@@ -8,7 +8,6 @@ const walletSchema = new Schema<IWallet>(
       ref: "User",
       required: true,
       unique: true,
-      index: true,
     },
     balance: {
       type: Number,
@@ -43,7 +42,7 @@ const walletSchema = new Schema<IWallet>(
 );
 
 // Indexes
-walletSchema.index({ userId: 1 });
+// Note: userId field already has unique: true and index: true which creates an index automatically
 walletSchema.index({ balance: 1 });
 walletSchema.index({ lastTransactionAt: -1 });
 
@@ -53,7 +52,10 @@ walletSchema.statics["findByUser"] = function (userId: string) {
 };
 
 walletSchema.statics["findActiveWallets"] = function () {
-  return this.find({ isActive: true }).populate("userId", "firstName lastName email");
+  return this.find({ isActive: true }).populate(
+    "userId",
+    "firstName lastName email"
+  );
 };
 
 // Instance methods
@@ -88,4 +90,4 @@ walletSchema.methods["releaseFunds"] = function (amount: number) {
 };
 
 export const Wallet = mongoose.model<IWallet, any>("Wallet", walletSchema);
-export default Wallet; 
+export default Wallet;

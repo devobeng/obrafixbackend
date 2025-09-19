@@ -13,6 +13,8 @@ router.post("/", authenticate(), reviewController.createReview);
 router.get("/user/me", authenticate(), reviewController.getReviewsByUser);
 router.put("/:id", authenticate(), reviewController.updateReview);
 router.delete("/:id", authenticate(), reviewController.deleteReview);
+router.post("/:reviewId/like", authenticate(), reviewController.likeReview);
+router.delete("/:reviewId/like", authenticate(), reviewController.unlikeReview);
 
 // Admin-only routes
 router.patch(

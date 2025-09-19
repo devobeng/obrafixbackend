@@ -59,7 +59,6 @@ const refundRequestSchema = new Schema<IRefundRequest>(
       type: String,
       required: true,
       unique: true,
-      index: true,
     },
     reason: {
       type: String,

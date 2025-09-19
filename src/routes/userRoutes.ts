@@ -6,7 +6,7 @@ import upload from "../config/multer";
 const router = Router();
 
 // Apply authentication middleware to all routes
-router.use(authenticateToken());
+router.use(authenticateToken);
 
 // Profile image routes
 router.post(

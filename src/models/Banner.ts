@@ -130,19 +130,19 @@ bannerSchema.pre("save", function (next) {
 });
 
 // Method to increment view count
-bannerSchema.methods.incrementViewCount = function () {
-  this.viewCount += 1;
-  return this.save();
+bannerSchema.methods["incrementViewCount"] = function () {
+  this["viewCount"] += 1;
+  return this["save"]();
 };
 
 // Method to increment click count
-bannerSchema.methods.incrementClickCount = function () {
-  this.clickCount += 1;
-  return this.save();
+bannerSchema.methods["incrementClickCount"] = function () {
+  this["clickCount"] += 1;
+  return this["save"]();
 };
 
 // Static method to get active banners for a specific audience
-bannerSchema.statics.getActiveBanners = function (
+bannerSchema.statics["getActiveBanners"] = function (
   audience: string,
   roles?: string[]
 ) {

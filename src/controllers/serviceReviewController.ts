@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { ServiceReviewService } from "../services/ServiceReviewService";
 import { asyncHandler } from "../middleware/errorHandler";
 import { AppError } from "../utils/AppError";
+import { validateObjectId } from "../utils/validation";
 
 export class ServiceReviewController {
   private reviewService: ServiceReviewService;
@@ -17,6 +18,10 @@ export class ServiceReviewController {
 
     if (!serviceId || !rating || !comment) {
       throw new AppError("Service ID, rating, and comment are required", 400);
+    }
+
+    if (!validateObjectId(serviceId)) {
+      throw new AppError("Invalid service ID format", 400);
     }
 
     if (rating < 1 || rating > 5) {
@@ -41,6 +46,11 @@ export class ServiceReviewController {
   public getReviewsByService = asyncHandler(
     async (req: Request, res: Response) => {
       const { serviceId } = req.params;
+
+      if (!validateObjectId(serviceId)) {
+        throw new AppError("Invalid service ID format", 400);
+      }
+
       const page = parseInt(req.query["page"] as string) || 1;
       const limit = parseInt(req.query["limit"] as string) || 10;
 
@@ -155,6 +165,42 @@ export class ServiceReviewController {
     res.json({
       success: true,
       message: "Review verified successfully",
+      data: { review },
+    });
+  });
+
+  // Like a review (authenticated users only)
+  public likeReview = asyncHandler(async (req: Request, res: Response) => {
+    const { reviewId } = req.params;
+    const userId = (req as any).user?.id;
+
+    if (!validateObjectId(reviewId)) {
+      throw new AppError("Invalid review ID format", 400);
+    }
+
+    const review = await this.reviewService.likeReview(reviewId, userId);
+
+    res.json({
+      success: true,
+      message: "Review liked successfully",
+      data: { review },
+    });
+  });
+
+  // Unlike a review (authenticated users only)
+  public unlikeReview = asyncHandler(async (req: Request, res: Response) => {
+    const { reviewId } = req.params;
+    const userId = (req as any).user?.id;
+
+    if (!validateObjectId(reviewId)) {
+      throw new AppError("Invalid review ID format", 400);
+    }
+
+    const review = await this.reviewService.unlikeReview(reviewId, userId);
+
+    res.json({
+      success: true,
+      message: "Review unliked successfully",
       data: { review },
     });
   });

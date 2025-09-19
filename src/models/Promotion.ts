@@ -156,7 +156,7 @@ const promotionSchema = new Schema<IPromotion>(
 
 // Indexes for better query performance
 promotionSchema.index({ isActive: 1, startDate: 1, endDate: 1 });
-promotionSchema.index({ code: 1 });
+// Note: code field already has unique: true which creates an index automatically
 promotionSchema.index({ targetAudience: 1, isActive: 1 });
 promotionSchema.index({ type: 1, isActive: 1 });
 
