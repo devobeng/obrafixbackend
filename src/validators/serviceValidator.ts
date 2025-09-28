@@ -211,6 +211,31 @@ export const serviceSearchSchema = z.object({
     .string()
     .optional()
     .transform((val) => parseInt(val || "10")),
+  category: z.string().optional(),
+  subcategory: z.string().optional(),
+  minPrice: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseFloat(val) : undefined)),
+  maxPrice: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseFloat(val) : undefined)),
+  location: z.string().optional(),
+  rating: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseFloat(val) : undefined)),
+  availability: z.string().optional(),
+  serviceRadius: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseFloat(val) : undefined)),
+  pricingType: z.enum(["hourly", "fixed", "negotiable"]).optional(),
+  sortBy: z
+    .enum(["rating", "price", "distance", "name", "createdAt"])
+    .optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
 });
 
 // Service pagination validation schema

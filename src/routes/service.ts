@@ -57,6 +57,12 @@ router.patch(
   validateRequest(serviceStatusUpdateSchema),
   serviceController.updateServiceStatus
 );
+router.patch(
+  "/:id/availability",
+  authenticate(),
+  requireRole(["provider", "admin"]),
+  serviceController.updateServiceAvailability
+);
 
 // Enhanced service queries
 router.get(

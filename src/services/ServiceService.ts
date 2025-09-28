@@ -408,6 +408,128 @@ export class ServiceService {
     }
   }
 
+  // Advanced search services with filtering
+  async searchServicesAdvanced(
+    query: string,
+    filters: {
+      page: number;
+      limit: number;
+      category?: string;
+      subcategory?: string;
+      minPrice?: number;
+      maxPrice?: number;
+      location?: string;
+      rating?: number;
+      availability?: string;
+      serviceRadius?: number;
+      pricingType?: "hourly" | "fixed" | "negotiable";
+      sortBy?: string;
+      sortOrder?: string;
+    }
+  ): Promise<PaginatedResult<IService>> {
+    try {
+      const { page, limit } = filters;
+      const skip = (page - 1) * limit;
+
+      // Build search query
+      const searchQuery: any = {
+        status: "active",
+        $or: [
+          { title: { $regex: query, $options: "i" } },
+          { description: { $regex: query, $options: "i" } },
+          { category: { $regex: query, $options: "i" } },
+          { subcategory: { $regex: query, $options: "i" } },
+        ],
+      };
+
+      // Add filters
+      if (filters.category) searchQuery.category = filters.category;
+      if (filters.subcategory) searchQuery.subcategory = filters.subcategory;
+
+      if (filters.minPrice || filters.maxPrice) {
+        searchQuery["pricing.amount"] = {};
+        if (filters.minPrice)
+          searchQuery["pricing.amount"].$gte = filters.minPrice;
+        if (filters.maxPrice)
+          searchQuery["pricing.amount"].$lte = filters.maxPrice;
+      }
+
+      if (filters.pricingType)
+        searchQuery["pricing.type"] = filters.pricingType;
+      if (filters.rating)
+        searchQuery["rating.average"] = { $gte: filters.rating };
+      if (filters.availability)
+        searchQuery["availability.isAvailable"] =
+          filters.availability === "true";
+      if (filters.serviceRadius)
+        searchQuery["location.serviceRadius"] = { $gte: filters.serviceRadius };
+
+      if (filters.location) {
+        searchQuery.$and = [
+          searchQuery,
+          {
+            $or: [
+              { "location.city": { $regex: filters.location, $options: "i" } },
+              { "location.state": { $regex: filters.location, $options: "i" } },
+              {
+                "location.address": { $regex: filters.location, $options: "i" },
+              },
+            ],
+          },
+        ];
+        delete searchQuery.$or; // Remove the original $or since we're using $and
+      }
+
+      // Build sort object
+      let sortObj: any = { createdAt: -1 }; // Default sort
+      if (filters.sortBy && filters.sortOrder) {
+        sortObj = {};
+        switch (filters.sortBy) {
+          case "rating":
+            sortObj["rating.average"] = filters.sortOrder === "desc" ? -1 : 1;
+            break;
+          case "price":
+            sortObj["pricing.amount"] = filters.sortOrder === "desc" ? -1 : 1;
+            break;
+          case "distance":
+            sortObj["location.serviceRadius"] =
+              filters.sortOrder === "desc" ? -1 : 1;
+            break;
+          case "name":
+            sortObj.title = filters.sortOrder === "desc" ? -1 : 1;
+            break;
+          default:
+            sortObj.createdAt = filters.sortOrder === "desc" ? -1 : 1;
+        }
+      }
+
+      const [services, total] = await Promise.all([
+        Service.find(searchQuery)
+          .populate("provider", "firstName lastName email profileImage")
+          .sort(sortObj)
+          .skip(skip)
+          .limit(limit),
+        Service.countDocuments(searchQuery),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        data: services,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      };
+    } catch (error) {
+      throw new AppError("Failed to search services", 500);
+    }
+  }
+
   // Get services by availability
   async getServicesByAvailability(
     day: string,
@@ -649,6 +771,42 @@ export class ServiceService {
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError("Failed to delete service category", 500);
+    }
+  }
+
+  // Update service availability
+  async updateServiceAvailability(
+    serviceId: string,
+    providerId: string,
+    availability: {
+      isAvailable?: boolean;
+      workingDays?: Array<{
+        day: string;
+        startTime: string;
+        endTime: string;
+        isAvailable: boolean;
+      }>;
+      emergencyService?: boolean;
+      noticeRequired?: number;
+    }
+  ): Promise<IService> {
+    try {
+      const service = await Service.findOneAndUpdate(
+        { _id: serviceId, provider: providerId },
+        { $set: { availability } },
+        { new: true, runValidators: true }
+      ).populate("provider", "firstName lastName email profileImage");
+
+      if (!service) {
+        throw new AppError("Service not found or access denied", 404);
+      }
+
+      return service;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw new AppError("Failed to update service availability", 500);
     }
   }
 }

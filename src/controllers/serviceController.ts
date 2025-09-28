@@ -239,20 +239,48 @@ export class ServiceController {
     }
   );
 
-  // Search services
+  // Search services with advanced filtering
   public searchServices = asyncHandler(async (req: Request, res: Response) => {
     const { q } = req.query;
     const page = parseInt(req.query["page"] as string) || 1;
     const limit = parseInt(req.query["limit"] as string) || 10;
+    const category = req.query["category"] as string;
+    const subcategory = req.query["subcategory"] as string;
+    const minPrice = req.query["minPrice"] as string;
+    const maxPrice = req.query["maxPrice"] as string;
+    const location = req.query["location"] as string;
+    const rating = req.query["rating"] as string;
+    const availability = req.query["availability"] as string;
+    const serviceRadius = req.query["serviceRadius"] as string;
+    const pricingType = req.query["pricingType"] as
+      | "hourly"
+      | "fixed"
+      | "negotiable";
+    const sortBy = req.query["sortBy"] as string;
+    const sortOrder = req.query["sortOrder"] as string;
 
     if (!q) {
       throw new AppError("Search query is required", 400);
     }
 
-    const result = await this.serviceService.searchServices(q as string, {
-      page,
-      limit,
-    });
+    const result = await this.serviceService.searchServicesAdvanced(
+      q as string,
+      {
+        page,
+        limit,
+        category,
+        subcategory,
+        minPrice: minPrice ? parseFloat(minPrice) : undefined,
+        maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+        location,
+        rating: rating ? parseFloat(rating) : undefined,
+        availability,
+        serviceRadius: serviceRadius ? parseFloat(serviceRadius) : undefined,
+        pricingType,
+        sortBy,
+        sortOrder,
+      }
+    );
 
     res.json({
       success: true,
@@ -318,6 +346,35 @@ export class ServiceController {
       data: { stats },
     });
   });
+
+  // Update service availability
+  public updateServiceAvailability = asyncHandler(
+    async (req: Request, res: Response) => {
+      const { id } = req.params;
+      const { availability } = req.body;
+      const providerId = (req as any).user?.id;
+
+      if (!id) {
+        throw new AppError("Service ID is required", 400);
+      }
+
+      if (!availability) {
+        throw new AppError("Availability data is required", 400);
+      }
+
+      const service = await this.serviceService.updateServiceAvailability(
+        id,
+        providerId,
+        availability
+      );
+
+      res.json({
+        success: true,
+        message: "Service availability updated successfully",
+        data: { service },
+      });
+    }
+  );
 }
 
 export default new ServiceController();

@@ -1,28 +1,17 @@
 import express from "express";
 import { authenticate } from "../middleware/auth";
+import serviceController from "../controllers/serviceController";
+import { validateRequest } from "../middleware/validation";
+import { serviceSearchSchema } from "../validators/serviceValidator";
 
 const router = express.Router();
 
-// Search services
-router.get("/services", async (req, res) => {
-  try {
-    const { q, category, location, minPrice, maxPrice, rating } = req.query;
-
-    // TODO: Implement service search logic
-    res.status(200).json({
-      success: true,
-      message: "Search results retrieved successfully",
-      data: [],
-      query: { q, category, location, minPrice, maxPrice, rating },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to search services",
-      error: error.message,
-    });
-  }
-});
+// Search services with advanced filtering
+router.get(
+  "/services",
+  validateRequest(serviceSearchSchema, "query"),
+  serviceController.searchServices
+);
 
 // Search providers
 router.get("/providers", async (req, res) => {
