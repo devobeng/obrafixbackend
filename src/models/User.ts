@@ -115,6 +115,13 @@ const userSchema = new Schema<IUser>(
         isPrimary: { type: Boolean, default: false },
       },
     ],
+    // Bookmarked services by the user
+    bookmarks: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Service",
+      },
+    ],
   },
   {
     timestamps: true,

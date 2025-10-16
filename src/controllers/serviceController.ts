@@ -8,6 +8,7 @@ import {
 } from "../validators/serviceValidator";
 import { AppError } from "../utils/AppError";
 import { validateObjectId } from "../utils/validation";
+import User from "../models/User";
 
 export class ServiceController {
   private serviceService: ServiceService;
@@ -375,6 +376,94 @@ export class ServiceController {
       });
     }
   );
+
+  // Toggle bookmark on a service for current user
+  public toggleBookmark = asyncHandler(async (req: any, res: Response) => {
+    const userId = req.user?.id;
+    const { id: serviceId } = req.params;
+
+    if (!userId) throw new AppError("User not authenticated", 401);
+    if (!validateObjectId(serviceId))
+      throw new AppError("Invalid service ID", 400);
+
+    const user = await User.findById(userId);
+    if (!user) throw new AppError("User not found", 404);
+
+    const hasBookmark = (user.bookmarks as any[])?.some(
+      (s: any) => s.toString() === serviceId
+    );
+
+    if (hasBookmark) {
+      user.bookmarks = (user.bookmarks as any[]).filter(
+        (s: any) => s.toString() !== serviceId
+      ) as any;
+    } else {
+      user.bookmarks = [...((user.bookmarks as any[]) || []), serviceId] as any;
+    }
+
+    await user.save();
+
+    res.json({ success: true, data: { bookmarked: !hasBookmark } });
+  });
+
+  // Get current user's bookmarked services
+  public getBookmarkedServices = asyncHandler(
+    async (req: any, res: Response) => {
+      const userId = req.user?.id;
+      if (!userId) throw new AppError("User not authenticated", 401);
+
+      const user = await User.findById(userId).populate({
+        path: "bookmarks",
+        populate: {
+          path: "provider",
+          select: "firstName lastName profileImage",
+        },
+      });
+      if (!user) throw new AppError("User not found", 404);
+
+      res.json({ success: true, data: user.bookmarks || [] });
+    }
+  );
+
+  // Compare multiple services by ids (comma-separated)
+  public compareServices = asyncHandler(async (req: Request, res: Response) => {
+    const idsParam = (req.query["ids"] as string) || "";
+    const ids = idsParam
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
+    if (ids.length === 0) {
+      throw new AppError("ids query parameter is required", 400);
+    }
+
+    const invalid = ids.find((id) => !validateObjectId(id));
+    if (invalid) {
+      throw new AppError(`Invalid service id: ${invalid}`, 400);
+    }
+
+    const services = await Service.find({ _id: { $in: ids } })
+      .populate("provider", "firstName lastName profileImage")
+      .lean();
+
+    const compact = services.map((s: any) => ({
+      id: s._id.toString(),
+      title: s.title,
+      category: s.category,
+      subcategory: s.subcategory,
+      pricing: s.pricing,
+      estimatedDuration: s.estimatedDuration,
+      rating: s.rating,
+      provider: s.provider,
+      image: Array.isArray(s.images) && s.images[0] ? s.images[0] : undefined,
+      location: s.location,
+      tags: s.tags,
+      requirements: s.requirements,
+      status: s.status,
+    }));
+
+    res.json({ success: true, data: compact });
+  });
 }
 
 export default new ServiceController();

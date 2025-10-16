@@ -20,6 +20,7 @@ router.get(
   serviceController.getAllServices
 );
 router.get("/popular", serviceController.getPopularServices);
+router.get("/compare", serviceController.compareServices);
 router.get("/:id", serviceController.getServiceById);
 router.get("/provider/:providerId", serviceController.getServicesByProvider);
 router.get("/category/:category", serviceController.getServicesByCategory);
@@ -27,6 +28,14 @@ router.get(
   "/search",
   validateRequest(serviceSearchSchema, "query"),
   serviceController.searchServices
+);
+
+// Authenticated user routes for bookmarks
+router.post("/:id/bookmark", authenticate(), serviceController.toggleBookmark);
+router.get(
+  "/bookmarked",
+  authenticate(),
+  serviceController.getBookmarkedServices
 );
 
 // Protected routes (provider/admin only)

@@ -66,6 +66,7 @@ export interface IUser extends Document {
     relationship?: string;
     isPrimary: boolean;
   }>;
+  bookmarks?: Array<string>;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;

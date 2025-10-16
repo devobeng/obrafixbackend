@@ -33,6 +33,10 @@ const fileFilter = (
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);
   }
+  // Allow videos
+  else if (file.mimetype.startsWith("video/")) {
+    cb(null, true);
+  }
   // Allow PDF documents
   else if (file.mimetype === "application/pdf") {
     cb(null, true);

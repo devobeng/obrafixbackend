@@ -1,5 +1,7 @@
 import express from "express";
 import { authenticate } from "../middleware/auth";
+import upload from "../config/multer";
+import { cloudinaryService } from "../services/CloudinaryService";
 
 const router = express.Router();
 
@@ -28,24 +30,30 @@ router.post("/profile-image", async (req, res) => {
 });
 
 // Upload service images
-router.post("/service-images", async (req, res) => {
+router.post("/service-media", upload.array("files", 10), async (req, res) => {
   try {
-    // TODO: Implement service images upload logic
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No files uploaded" });
+    }
+
+    const uploads = await Promise.all(
+      files.map((file) =>
+        cloudinaryService.uploadProfileImage(file, "service-media")
+      )
+    );
+
     res.status(200).json({
       success: true,
-      message: "Service images uploaded successfully",
-      data: {
-        urls: [
-          "https://example.com/service1.jpg",
-          "https://example.com/service2.jpg",
-        ],
-        filenames: ["service1.jpg", "service2.jpg"],
-      },
+      message: "Service media uploaded successfully",
+      data: uploads.map((u) => ({ url: u.secure_url, publicId: u.public_id })),
     });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({
       success: false,
-      message: "Failed to upload service images",
+      message: "Failed to upload service media",
       error: error.message,
     });
   }
